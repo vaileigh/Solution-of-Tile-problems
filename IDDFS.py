@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Nov 12 14:18:57 2021
+Created on Tue Nov 16 16:19:06 2021
 
 @author: jje20gpa
 """
-
+from datetime import datetime
 import copy
 import itertools
 
@@ -72,11 +72,13 @@ def count (first, start_state, goal_state):
 
 start_state = [0, 0, [[0, 7, 1], [4, 3, 2], [8, 6, 5]]]
 depth = 0;
+init_time = datetime.now()
 for depth in itertools.count():
     
     path = dfs_rec([start_state], depth)
     if path != None:
         print(path)
         break; 
-                
-   
+        
+fin_time = datetime.now()
+print("Execution time (for loop): ", (fin_time-init_time))
