@@ -39,32 +39,53 @@ def is_goal(path, goal_state):
     
 
 def dfs_rec ( path , goal_state, depth, g):
-    print(str(path))
+    
     g += 1
     newState = []
     if depth == 0:
-       return None;
+        return path
     if is_goal (path, goal_state):
         return path
     else :
         point = []
-        
+        print(str(path))
+       
         for nextState in move (path[-1]):
-            print(str(path))
+            print(str(nextState))
             point.append(g + h([nextState], goal_state))
-            #print(str(point))
-        
+               
+        print(str(point))
+        countF = 1
         lower = 0;
         for i in range(len(point)):
             if point[i] < point[lower] :
                 lower = i
-        
+                countF += 1
+                
+        rollbackPath = path
         
         for i in range (len(point)):
-
-            if lower != i:
+            counter = 0
+            while countF != 0:
+                for nextState in move (path[-1]):
+                    print(str(nextState))
+                    if nextState not in path:
+                        
+                        if counter == lower or counter == i:
+                            countF -=1
+                            nextPath = path + [ nextState ]
+                            solution = dfs_rec ( nextPath ,goal_state, depth - 1, g)
+                            if solution != None :
+                                return solution
+                            
+                counter += 1
+                        
+            '''
+            if lower != i: # Multiple same values
+                
                 if point[lower] == point[i]:
-                    counter = 0;
+                    
+                    counter = 0
                     for nextState in move (path[-1]):
                         #return nextState
                         if nextState not in path :
@@ -72,24 +93,25 @@ def dfs_rec ( path , goal_state, depth, g):
                             if counter == i:
                                 nextPath = path + [ nextState ]
                                 # print("1" + str(nextPath))
-                                break
                                 solution = dfs_rec ( nextPath ,goal_state, depth - 1, g)
                                 if solution != None :
                                     return solution
                         counter +=1
-            if lower == i:
+                        
+            elif lower == i:
                 counter = 0
                 for nextState in move (path[-1]):
-                        #return nextState
-                        if nextState not in path :
-                            # print("2"+str(nextState))
-                            if counter == lower:
-                                nextPath = path + [ nextState ]
-                                # print("3" + str(nextPath))
-                                solution = dfs_rec ( nextPath , goal_state, depth - 1, g)
-                                if solution != None :
-                                    return solution
-                        counter +=1
+                    #return nextState
+                    if nextState not in path :
+                        # print("2"+str(nextState))
+                        if counter == lower:
+                            nextPath = path + [ nextState ]
+                            # print("3" + str(nextPath))
+                            solution = dfs_rec ( nextPath , goal_state, depth - 1, g)
+                            if solution != None :
+                                return solution
+                    counter +=1
+                    '''
         #return nextPath
         #solution = dfs_rec ( nextPath , goal_state, depth - 1, g)
         #if solution != None :
@@ -110,10 +132,10 @@ def h (start_state, goal_state):
                     n += 1
     return n
 
-goal_state  = [0 ,2 , [[3, 2, 0], [6, 1, 8], [4, 7, 5]]]
-# goal_state  = [2 ,2 , [[1, 2, 3], [4, 5, 6], [7, 8, 0]]]
-# start_state = [1, 0, [[1,2,3], [0,4,6], [7,5,8]]]
-start_state = [0, 0, [[0, 7, 1], [4, 3, 2], [8, 6, 5]]]
+# goal_state  = [0 ,2 , [[3, 2, 0], [6, 1, 8], [4, 7, 5]]]
+goal_state  = [1,0, [[8,1,3], [0,2,4], [7,6,5]]]
+start_state = [2,1, [[2,8,3], [1,6,4], [7,0,5]]]
+#start_state = [0, 0, [[0, 7, 1], [4, 3, 2], [8, 6, 5]]]
 depth = 0;
 g = 0;
 
@@ -121,10 +143,18 @@ init_time = datetime.now()
 path = [start_state]
 for depth in itertools.count():
     #f = depth + h([start_state], goal_state)
-    path = dfs_rec(path, goal_state, depth, g)
-    if is_goal (path, goal_state):
-        print(path)
-        break; 
-    break;
+    print("\n"+ str(path))
+    if depth == 4:
+        break
+    print("Stage :" + str(depth))
+    if depth != 0:
+        if path == None:
+            path = [start_state]
+        path = dfs_rec(path, goal_state, depth, g)
+        if path != None:
+            if is_goal(path, goal_state):
+                print(path)
+                break; 
+        
 fin_time = datetime.now()
 print("Execution time (for loop): ", (fin_time-init_time))
