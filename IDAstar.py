@@ -1,124 +1,109 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Nov 12 14:18:57 2021
-@author: jje20gpa
-"""
+
 from datetime import datetime
-import sys
+import copy
+start_state = [1,0,[[1,2,3],[0,4,6],[7,5,8]]]
+goal_state = [2,2,[[1,2,3],[4,5,6],[7,8,0]]]
+
+""" Generate a Node class """
 class Node:
+    """ Initialise the node with data, level of the node, the fvalue = start level + h and parent """
     def __init__(self,data,level,fval,parent):
-        """ Initialize the node with the data, level of the node and the calculated fvalue """
         self.data = data
         self.level = level
         self.fval = fval
         self.parent = parent
-
+    
+    """ Move to blank space with UP or DOWN or RIGHT or LEFT """
+    def move_blank (i ,j , n ):
+        if i +1 < n :
+            yield ( i +1 , j )
+        if i -1 >= 0:
+            yield (i -1 , j )
+        if j +1 < n :
+            yield (i , j +1)
+        if j -1 >= 0:
+            yield (i ,j -1)
+        
+    """ Get the possible state using a generator function"""
+    def move (self, state ):
+        [i ,j , grid ] = state
+        n = len ( grid )
+        
+        # print(str(i)+" " + str(j) +" "+ str(n));
+        for pos in Node.move_blank (i ,j , n ):
+            i1 , j1 = pos
+            """ Copy the grid without effect the original object """
+            newgrid = copy.deepcopy(grid)
+            newgrid [ i ][ j ] , newgrid [ i1 ][ j1 ] = grid [ i1 ][ j1 ] , grid [ i ][ j ]
+            yield [ i1 , j1 , newgrid ]
+            newgrid [ i ][ j ] , newgrid [ i1 ][ j1 ] = grid [ i1 ][ j1 ] , grid [ i ][ j ]
+    
+    """ Generate child nodes from the parent state and return all the children"""
     def generate_child(self):
-        """ Generate child nodes from the given node by moving the blank space
-            either in the four directions {up,down,left,right} """
-        x,y = self.find(self.data,0)
-        """ val_list contains position values for moving the blank space in either of
-            the 4 directions [up,down,left,right] respectively. """
-        val_list = [[x,y-1],[x,y+1],[x-1,y],[x+1,y]]
-        children = []
-        for i in val_list:
-            child = self.shuffle(self.data,x,y,i[0],i[1])
-            if child is not None:
-                child_node = Node(child,self.level+1,0, self.data)
-                children.append(child_node)
-        return children
-    
-    
-    def shuffle(self,puz,x1,y1,x2,y2):
-        """ Move the blank space in the given direction and if the position value are out
-            of limits the return None """
-        if x2 >= 0 and x2 < len(self.data) and y2 >= 0 and y2 < len(self.data):
-            temp_puz = []
-            temp_puz = self.copy(puz)
-            temp = temp_puz[x2][y2]
-            temp_puz[x2][y2] = temp_puz[x1][y1]
-            temp_puz[x1][y1] = temp
-            return temp_puz
-        else:
-            return None
-            
+        self.children = []
+        """ Loop every possible movement on current state """
+        for nextState in self.move (self.data):
+            child_node = Node(nextState,self.level+1,0, self.data)
+            self.children.append(child_node)
+        return self.children
 
-    def copy(self,root):
-        """ Copy function to create a similar matrix of the given node"""
-        temp = []
-        for i in root:
-            t = []
-            for j in i:
-                t.append(j)
-            temp.append(t)
-        return temp    
-            
-    def find(self,puz,x):
-        """ Specifically used to find the position of the blank space """
-        for i in range(0,len(self.data)):
-            for j in range(0,len(self.data)):
-                if puz[i][j] == x:
-                    return i,j
-
-
-class Puzzle:
+""" Generate a Tiles class """
+class Tiles:
+    """ Initialize the tiles size by the specified size,open and closed lists to empty """
     def __init__(self,size):
-        """ Initialize the puzzle size by the specified size,open and closed lists to empty """
         self.n = size
         self.open = []
         self.closed = []
 
-    def accept(self):
-        """ Accepts the puzzle from the user """
-        puz = []
-        for i in range(0,self.n):
-            temp = input().split(" ")
-            puz.append(temp)
-        return puz
 
+    """ Create a function to return f value = h + start level """
     def f(self,start,goal):
-        """ Heuristic Function to calculate hueristic value f(x) = h(x) + g(x) """
         return self.h(start.data,goal)+start.level
 
+    """ Create a function to return h value """
     def h(self,start,goal):
-        """ Calculates the different between the given puzzles """
-        temp = 0
+        start = start[-1]
+        goal = goal[-1]
+        count = 0
+        
+        """ Calculate the different between goal and current state but 0 not count"""
         for i in range(0,self.n):
             for j in range(0,self.n):
                 if start[i][j] != goal[i][j] and start[i][j] != 0:
-                    temp += 1
-        return temp
+                        count += 1
+        return count
         
-
-    def process(self):
-        """ Accept Start and Goal Puzzle state"""
+    """ main function to run """
+    def process(self):        
+        """ start, goal with no same f value"""
+        #start = [1,1, [[2,8,3],[1,0,4],[7,6,5]]]
+        #goal = [1,1,[[1,2,3],[8,0,4],[7,6,5]]]
+        """ start, goal with 2 same f values """
+        #start = [1,0, [[1,2,3],[0,4,6],[7,5,8]]]
+        #goal = [2,2, [[1,2,3],[4,5,6],[7,8,0]]]
+        """ start, goal with complex tree """
+        start = [0,0,[[0, 7, 1], [4, 3, 2], [8, 6, 5]]]
+        goal = [0,2,[[3, 2, 0], [6, 1, 8], [4, 7, 5]]]
         
-        
-        #start = [[2,8,3],[1,0,4],[7,6,5]]
-        #goal = [[1,2,3],[8,0,4],[7,6,5]]
-        start = [[1,2,3],[0,4,6],[7,5,8]]
-        goal = [[1,2,3],[4,5,6],[7,8,0]]
-        #start = [[0, 7, 1], [4, 3, 2], [8, 6, 5]]
-        #goal = [[3, 2, 0], [6, 1, 8], [4, 7, 5]]
-
+        """ Add start to node"""
         start = Node(start,0,0,start)
+        """ Calculate the f value """
         start.fval = self.f(start,goal)
         """ Put the start node in the open list"""
         self.open.append(start)
-        print("\n\n")
         won = False
         while not won:
             curr = self.open[0]
-            count = 0
+            """ Apply an infinite loop """
             while True:
+                """ The current node is open[0] because the list table are sorted with f value """
                 cur = self.open[0]
-                
+                """ Looking for same f value state """
                 if cur.fval == curr.fval:
-                    count += 1
+                    
+                    """ If is goal print all the steps """
                     if(self.h(cur.data,goal) == 0):
-                        
                         s = self.closed[len(self.closed) - 1]
-                        
                         path = []
                         path.append(cur)
                         path.append(s)
@@ -127,30 +112,40 @@ class Puzzle:
                                 path.append(path[len(path)-1].parent)
                                 break
                             path.append(path[len(path)-1].parent)
-                        
                         for i in reversed(range(len(path))):
                             print(str(path[i].data))
-                        
                         won = True
                         break
+                    """ Generate children from the current state """
                     for i in cur.generate_child():
+                        """ Calculate the f value """
                         i.fval = self.f(i,goal)
+                        """ Initialise the parent """
                         i.parent = cur
+                        """ Store all the children into open list """
                         self.open.append(i)
+                    """ Store the lower f value current state into closed list """
                     self.closed.append(cur)
+                    """ Delete the first item in open list """
                     del self.open[0]
+                    """ Sort the open list with f value in ascending order """
                     self.open.sort(key = lambda x:x.fval,reverse=False)
                 else:
                     break
-            
-            """ If the difference between current and goal node is 0 we have reached the goal node"""
-            
 
-            """ sort the opne list based on f value """
-            self.open.sort(key = lambda x:x.fval,reverse=False)
 
-init_time = datetime.now()
-puz = Puzzle(3)
-puz.process()
-fin_time = datetime.now()
-print("Execution time (for loop): ", (fin_time-init_time))
+
+""" Main function """
+def main():
+    """ begin time """
+    begin = datetime.now()
+    til = Tiles(3)
+    til.process()
+    """ End time """
+    end = datetime.now()
+    """ Print Program execution time """
+    print("Execution time: ", (end-begin))
+
+""" Ask the program to run main function """
+if __name__ == "__main__":
+    main()
