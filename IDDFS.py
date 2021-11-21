@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov 16 16:19:06 2021
-
 @author: jje20gpa
 """
 from datetime import datetime
@@ -9,7 +8,11 @@ import copy
 import itertools
 
 
-start_state = [0, 0, [[0, 7, 1], [4, 3, 2], [8, 6, 5]]]
+start_state = [[0, 0, [[0, 7, 1], [4, 3, 2], [8, 6, 5]]],
+[0, 2, [[5, 6, 0], [1, 3, 8], [4, 7, 2]]],
+[2, 0, [[3, 5, 6], [1, 2, 7], [0, 8, 4]]],
+[1, 1, [[7, 3, 5], [4, 0, 2], [8, 1, 6]]],
+[2, 0, [[6, 4, 8], [7, 1, 3], [0, 2, 5]]]]
 goal_state = [0 ,2 , [[3, 2, 0], [6, 1, 8], [4, 7, 5]]]
 
 """ Move to blank space with UP or DOWN or RIGHT or LEFT """
@@ -71,16 +74,18 @@ def main():
     depth = 0;
     
     """ itertool.count() will assign the value 1 , 2, 3 .... n """
-    for depth in itertools.count():
-        """ Return the path from dfs_rec() function """
-        path = dfs_rec([start_state], depth)
-        """ if path not = None == solution found """
-        if path != None:
-            """ Print the solution """
-            for p in path:
-                print(str(p))
-            """ Break when solution has been found """
-            break; 
+    for start in start_state:
+        while True:
+            """ Return the path from dfs_rec() function """
+            path = dfs_rec([start], depth)
+            """ if path not = None == solution found """
+            if path != None:
+                """ Print the solution """
+                for p in path:
+                    print(str(p))
+                """ Break when solution has been found """
+                break;
+            depth += 1
     """ End time """
     end = datetime.now()
     """ Print Program execution time """
