@@ -1,8 +1,6 @@
 
 from datetime import datetime
 import copy
-start_state = [1,0,[[1,2,3],[0,4,6],[7,5,8]]]
-goal_state = [2,2,[[1,2,3],[4,5,6],[7,8,0]]]
 
 """ Generate a Node class """
 class Node:
