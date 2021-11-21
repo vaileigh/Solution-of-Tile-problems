@@ -4,157 +4,153 @@ Created on Fri Nov 12 14:18:57 2021
 @author: jje20gpa
 """
 from datetime import datetime
-import copy
-import itertools
+import sys
+class Node:
+    def __init__(self,data,level,fval,parent):
+        """ Initialize the node with the data, level of the node and the calculated fvalue """
+        self.data = data
+        self.level = level
+        self.fval = fval
+        self.parent = parent
 
-def move_blank (i ,j , n ):
-    if i +1 < n :
-        yield ( i +1 , j )
-    if i -1 >= 0:
-        yield (i -1 , j )
-    if j +1 < n :
-        yield (i , j +1)
-    if j -1 >= 0:
-        yield (i ,j -1)
-
-def move ( state ):
-    [i ,j , grid ]= state
-    n = len ( grid )
-    # print(str(i)+" " + str(j) +" "+ str(n));
-    for pos in move_blank (i ,j , n ):
-        i1 , j1 = pos
-        grid = copy.deepcopy(grid)
-        grid [ i ][ j ] , grid [ i1 ][ j1 ] = grid [ i1 ][ j1 ] , grid [ i ][ j ]
-        yield [ i1 , j1 , grid ]
-        grid [ i ][ j ] , grid [ i1 ][ j1 ] = grid [ i1 ][ j1 ] , grid [ i ][ j ]
-
-def is_goal(path, goal_state):
-    if path == None:
-        return False
-    if goal_state == path[-1]:
-        return True;
-    #if count(first, path, goal_state) == 9:
-        #return True  
-    return False
+    def generate_child(self):
+        """ Generate child nodes from the given node by moving the blank space
+            either in the four directions {up,down,left,right} """
+        x,y = self.find(self.data,0)
+        """ val_list contains position values for moving the blank space in either of
+            the 4 directions [up,down,left,right] respectively. """
+        val_list = [[x,y-1],[x,y+1],[x-1,y],[x+1,y]]
+        children = []
+        for i in val_list:
+            child = self.shuffle(self.data,x,y,i[0],i[1])
+            if child is not None:
+                child_node = Node(child,self.level+1,0, self.data)
+                children.append(child_node)
+        return children
     
-
-def dfs_rec ( path , goal_state, depth, g):
     
-    g += 1
-    newState = []
-    if depth == 0:
-        return path
-    if is_goal (path, goal_state):
-        return path
-    else :
-        point = []
-        print(str(path))
-       
-        for nextState in move (path[-1]):
-            print(str(nextState))
-            point.append(g + h([nextState], goal_state))
-               
-        print(str(point))
-        countF = 1
-        lower = 0;
-        for i in range(len(point)):
-            if point[i] < point[lower] :
-                lower = i
-                countF += 1
-                
-        rollbackPath = path
-        
-        for i in range (len(point)):
-            counter = 0
-            while countF != 0:
-                for nextState in move (path[-1]):
-                    print(str(nextState))
-                    if nextState not in path:
-                        
-                        if counter == lower or counter == i:
-                            countF -=1
-                            nextPath = path + [ nextState ]
-                            solution = dfs_rec ( nextPath ,goal_state, depth - 1, g)
-                            if solution != None :
-                                return solution
-                            
-                counter += 1
-                        
-            '''
-            if lower != i: # Multiple same values
-                
-                if point[lower] == point[i]:
-                    
-                    counter = 0
-                    for nextState in move (path[-1]):
-                        #return nextState
-                        if nextState not in path :
-                            # print("2"+str(nextState))
-                            if counter == i:
-                                nextPath = path + [ nextState ]
-                                # print("1" + str(nextPath))
-                                solution = dfs_rec ( nextPath ,goal_state, depth - 1, g)
-                                if solution != None :
-                                    return solution
-                        counter +=1
-                        
-            elif lower == i:
-                counter = 0
-                for nextState in move (path[-1]):
-                    #return nextState
-                    if nextState not in path :
-                        # print("2"+str(nextState))
-                        if counter == lower:
-                            nextPath = path + [ nextState ]
-                            # print("3" + str(nextPath))
-                            solution = dfs_rec ( nextPath , goal_state, depth - 1, g)
-                            if solution != None :
-                                return solution
-                    counter +=1
-                    '''
-        #return nextPath
-        #solution = dfs_rec ( nextPath , goal_state, depth - 1, g)
-        #if solution != None :
-            #return solution
-        
-    return None
+    def shuffle(self,puz,x1,y1,x2,y2):
+        """ Move the blank space in the given direction and if the position value are out
+            of limits the return None """
+        if x2 >= 0 and x2 < len(self.data) and y2 >= 0 and y2 < len(self.data):
+            temp_puz = []
+            temp_puz = self.copy(puz)
+            temp = temp_puz[x2][y2]
+            temp_puz[x2][y2] = temp_puz[x1][y1]
+            temp_puz[x1][y1] = temp
+            return temp_puz
+        else:
+            return None
+            
 
-def h (start_state, goal_state):
-    n = 0;
-    start = start_state[-1]
-    start = start[-1]
-    goal_state = goal_state[-1]
-    #print(str(start_state))
-    for row in range(len(start)):
-        length = len(start)
-        for column in range(length):
-            if start[row][column] != goal_state[row][column] and start[row][column] != 0:
-                    n += 1
-    return n
+    def copy(self,root):
+        """ Copy function to create a similar matrix of the given node"""
+        temp = []
+        for i in root:
+            t = []
+            for j in i:
+                t.append(j)
+            temp.append(t)
+        return temp    
+            
+    def find(self,puz,x):
+        """ Specifically used to find the position of the blank space """
+        for i in range(0,len(self.data)):
+            for j in range(0,len(self.data)):
+                if puz[i][j] == x:
+                    return i,j
 
-# goal_state  = [0 ,2 , [[3, 2, 0], [6, 1, 8], [4, 7, 5]]]
-goal_state  = [1,0, [[8,1,3], [0,2,4], [7,6,5]]]
-start_state = [2,1, [[2,8,3], [1,6,4], [7,0,5]]]
-#start_state = [0, 0, [[0, 7, 1], [4, 3, 2], [8, 6, 5]]]
-depth = 0;
-g = 0;
+
+class Puzzle:
+    def __init__(self,size):
+        """ Initialize the puzzle size by the specified size,open and closed lists to empty """
+        self.n = size
+        self.open = []
+        self.closed = []
+
+    def accept(self):
+        """ Accepts the puzzle from the user """
+        puz = []
+        for i in range(0,self.n):
+            temp = input().split(" ")
+            puz.append(temp)
+        return puz
+
+    def f(self,start,goal):
+        """ Heuristic Function to calculate hueristic value f(x) = h(x) + g(x) """
+        return self.h(start.data,goal)+start.level
+
+    def h(self,start,goal):
+        """ Calculates the different between the given puzzles """
+        temp = 0
+        for i in range(0,self.n):
+            for j in range(0,self.n):
+                if start[i][j] != goal[i][j] and start[i][j] != 0:
+                    temp += 1
+        return temp
+        
+
+    def process(self):
+        """ Accept Start and Goal Puzzle state"""
+        
+        
+        #start = [[2,8,3],[1,0,4],[7,6,5]]
+        #goal = [[1,2,3],[8,0,4],[7,6,5]]
+        start = [[1,2,3],[0,4,6],[7,5,8]]
+        goal = [[1,2,3],[4,5,6],[7,8,0]]
+        #start = [[0, 7, 1], [4, 3, 2], [8, 6, 5]]
+        #goal = [[3, 2, 0], [6, 1, 8], [4, 7, 5]]
+
+        start = Node(start,0,0,start)
+        start.fval = self.f(start,goal)
+        """ Put the start node in the open list"""
+        self.open.append(start)
+        print("\n\n")
+        won = False
+        while not won:
+            curr = self.open[0]
+            count = 0
+            while True:
+                cur = self.open[0]
+                
+                if cur.fval == curr.fval:
+                    count += 1
+                    if(self.h(cur.data,goal) == 0):
+                        
+                        s = self.closed[len(self.closed) - 1]
+                        
+                        path = []
+                        path.append(cur)
+                        path.append(s)
+                        while True:
+                            if path[len(path)-1].parent == self.closed[0]:
+                                path.append(path[len(path)-1].parent)
+                                break
+                            path.append(path[len(path)-1].parent)
+                        
+                        for i in reversed(range(len(path))):
+                            print(str(path[i].data))
+                        
+                        won = True
+                        break
+                    for i in cur.generate_child():
+                        i.fval = self.f(i,goal)
+                        i.parent = cur
+                        self.open.append(i)
+                    self.closed.append(cur)
+                    del self.open[0]
+                    self.open.sort(key = lambda x:x.fval,reverse=False)
+                else:
+                    break
+            
+            """ If the difference between current and goal node is 0 we have reached the goal node"""
+            
+
+            """ sort the opne list based on f value """
+            self.open.sort(key = lambda x:x.fval,reverse=False)
 
 init_time = datetime.now()
-path = [start_state]
-for depth in itertools.count():
-    #f = depth + h([start_state], goal_state)
-    print("\n"+ str(path))
-    if depth == 4:
-        break
-    print("Stage :" + str(depth))
-    if depth != 0:
-        if path == None:
-            path = [start_state]
-        path = dfs_rec(path, goal_state, depth, g)
-        if path != None:
-            if is_goal(path, goal_state):
-                print(path)
-                break; 
-        
+puz = Puzzle(3)
+puz.process()
 fin_time = datetime.now()
 print("Execution time (for loop): ", (fin_time-init_time))
